@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  PROFESSOR
+  ADMIN
+}
+
+enum IdeaStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  IDEA_REVIEWED
+  TEAM_JOIN_REQUEST
+  TEAM_JOINED
+  MESSAGE_RECEIVED
+  IDEA_LIKED
+  REVIEW_SUBMITTED
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        Role     @default(STUDENT)
+  bio         String?  @db.Text
+  avatar      String?
+  university  String?
+  department  String?
+  year        String?
+  skills      String[] @default([])
+  interests   String[] @default([])
+  githubUrl   String?
+  linkedinUrl String?
+  websiteUrl  String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ideas         Idea[]
+  teamMembers   TeamMember[]
+  reviews       Review[]
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  notifications Notification[]
+  ideaLikes     IdeaLike[]
+
+  @@map("users")
+}
+
+model Idea {
+  id          String     @id @default(cuid())
+  title       String
+  description String     @db.Text
+  tags        String[]   @default([])
+  status      IdeaStatus @default(OPEN)
+  domain      String?
+  stage       String?    // Ideation, MVP, Growth
+  teamSize    Int        @default(1)
+  lookingFor  String[]   @default([]) // roles they need
+  coverImage  String?
+  views       Int        @default(0)
+  flags       Int        @default(0) // For moderation
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  team      Team?
+  reviews   Review[]
+  likes     IdeaLike[]
+
+  @@map("ideas")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  ideaId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  idea    Idea         @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  members TeamMember[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("Member")
+  joinedAt  DateTime @default(now())
+  status    String   @default("ACTIVE") // ACTIVE, PENDING, REMOVED
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Review {
+  id          String       @id @default(cuid())
+  content     String       @db.Text
+  rating      Int          @default(0) // 1–5
+  status      ReviewStatus @default(PENDING)
+  feedback    String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  ideaId      String
+  idea        Idea   @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  professorId String
+  professor   User   @relation(fields: [professorId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  roomId    String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  senderId   String
+  sender     User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@map("messages")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  content   String
+  read      Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model IdeaLike {
+  id        String   @id @default(cuid())
+  ideaId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
+  @@map("idea_likes")
+}
