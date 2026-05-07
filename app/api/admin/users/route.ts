@@ -1,50 +1,65 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
 // GET /api/admin/users — all users (admin only)
 export async function GET(req: NextRequest) {
   try {
-    const authUser = getAuthUser(req);
-    if (!authUser || authUser.role !== "ADMIN") return apiError("Forbidden", 403);
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", authUser?.id)
+      .single();
+
+    if (profile?.role !== "ADMIN") return apiError("Forbidden", 403);
 
     const { searchParams } = new URL(req.url);
-    const role = searchParams.get("role") || undefined;
+    const role = searchParams.get("role");
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
     const limit = 20;
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where: {
-          ...(role && { role: role as "STUDENT" | "PROFESSOR" | "ADMIN" }),
-          ...(search && {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { email: { contains: search, mode: "insensitive" } },
-            ],
-          }),
-        },
-        select: {
-          id: true, name: true, email: true, role: true, avatar: true,
-          university: true, createdAt: true,
-          _count: { select: { ideas: true, reviews: true } },
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.user.count({
-        where: {
-          ...(role && { role: role as "STUDENT" | "PROFESSOR" | "ADMIN" }),
-        },
-      }),
-    ]);
+    let query = supabase
+      .from("profiles")
+      .select(`
+        *,
+        _count_ideas:ideas(count),
+        _count_reviews:reviews(count)
+      `, { count: "exact" });
 
-    return apiSuccess({ users, total, page, pages: Math.ceil(total / limit) });
+    if (role) query = query.eq("role", role);
+    if (search) query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    
+    const { data: users, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(from, to);
+
+    if (error) throw error;
+
+    // Format for frontend
+    const formattedUsers = users?.map(u => ({
+      ...u,
+      _count: {
+        ideas: u._count_ideas?.[0]?.count || 0,
+        reviews: u._count_reviews?.[0]?.count || 0
+      }
+    }));
+
+    return apiSuccess({ 
+      users: formattedUsers, 
+      total: count || 0, 
+      page, 
+      pages: Math.ceil((count || 0) / limit) 
+    });
   } catch (err) {
-    console.error("[ADMIN USERS]", err);
+    console.error("[ADMIN USERS GET]", err);
     return apiError("Internal server error", 500);
   }
 }
@@ -52,19 +67,19 @@ export async function GET(req: NextRequest) {
 // PATCH /api/admin/users — update user role
 export async function PATCH(req: NextRequest) {
   try {
-    const authUser = getAuthUser(req);
-    if (!authUser || authUser.role !== "ADMIN") return apiError("Forbidden", 403);
-
+    const supabase = await createClient();
     const body = await req.json();
     const { userId, role } = body;
 
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data: { role },
-      select: { id: true, name: true, email: true, role: true },
-    });
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ role })
+      .eq("id", userId)
+      .select()
+      .single();
 
-    return apiSuccess(updated);
+    if (error) throw error;
+    return apiSuccess(data);
   } catch (err) {
     console.error("[ADMIN USER PATCH]", err);
     return apiError("Internal server error", 500);
@@ -74,17 +89,18 @@ export async function PATCH(req: NextRequest) {
 // DELETE /api/admin/users — delete user
 export async function DELETE(req: NextRequest) {
   try {
-    const authUser = getAuthUser(req);
-    if (!authUser || authUser.role !== "ADMIN") return apiError("Forbidden", 403);
-
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     if (!userId) return apiError("User ID required", 400);
 
-    await prisma.user.delete({ where: { id: userId } });
+    const { error } = await supabase.from("profiles").delete().eq("id", userId);
+    if (error) throw error;
+
     return apiSuccess({ message: "User deleted" });
   } catch (err) {
     console.error("[ADMIN USER DELETE]", err);
     return apiError("Internal server error", 500);
   }
 }
+

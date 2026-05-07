@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 interface User {
   id: string;
@@ -18,6 +19,7 @@ interface User {
   githubUrl?: string;
   linkedinUrl?: string;
   websiteUrl?: string;
+  createdAt?: string;
   _count?: { ideas: number; reviews: number; teamMembers: number };
 }
 
@@ -25,8 +27,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (data: SignupData) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  signup: (data: SignupData) => Promise<User>;
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
 }
@@ -49,81 +51,182 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Restore session on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("auth_token");
-    if (storedToken) {
-      setToken(storedToken);
-      fetchMe(storedToken);
-    } else {
-      setLoading(false);
-    }
+    // Initial session fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const accessToken = session?.access_token || null;
+      setToken(accessToken);
+      if (accessToken) {
+        document.cookie = `auth_token=${accessToken}; path=/; max-age=${7*24*60*60}; SameSite=Lax`;
+        if (session && session.user) {
+          fetchProfile(session.user.id, session.user.email!);
+        } else {
+          setLoading(false);
+        }
+      } else {
+        document.cookie = `auth_token=; path=/; max-age=0`;
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth state changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const accessToken = session?.access_token || null;
+      setToken(accessToken);
+      
+      if (accessToken) {
+        document.cookie = `auth_token=${accessToken}; path=/; max-age=${7*24*60*60}; SameSite=Lax`;
+        if (session && session.user) {
+          fetchProfile(session.user.id, session.user.email!);
+        } else {
+          setLoading(false);
+        }
+      } else {
+        document.cookie = `auth_token=; path=/; max-age=0`;
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  async function fetchMe(t: string) {
+  async function fetchProfile(userId: string, email: string) {
     try {
-      const res = await fetch("/api/auth/me", {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data);
-      } else {
-        localStorage.removeItem("auth_token");
-        setToken(null);
+      let { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      // If no profile is found, automatically create it
+      if (error && error.code === "PGRST116") {
+        const { data: newProfile, error: insertError } = await supabase
+          .from("profiles")
+          .insert({ id: userId, email: email, role: "STUDENT" })
+          .select()
+          .single();
+          
+        if (!insertError) {
+          data = newProfile;
+          error = null;
+        }
+      } else if (error) {
+        throw error;
       }
-    } catch {
-      localStorage.removeItem("auth_token");
+      
+      if (data) {
+        setUser({ ...data, name: data.full_name || data.name || "Student", email } as User);
+      }
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   }
 
-  async function login(email: string, password: string) {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+  async function login(email: string, password: string): Promise<User> {
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Login failed");
+    if (authError) throw new Error(authError.message);
+    if (!authData.user) throw new Error("Login failed");
 
-    localStorage.setItem("auth_token", data.token);
-    setToken(data.token);
-    setUser(data.user);
+    let { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", authData.user.id)
+      .single();
 
-    // Redirect based on role
-    const role = data.user.role.toLowerCase();
-    if (role === "admin") router.push("/dashboard/admin");
-    else if (role === "professor") router.push("/dashboard/professor");
-    else router.push("/dashboard/student");
+    // Handle missing profile for existing users
+    if (profileError && profileError.code === "PGRST116") {
+      const { data: newProfile, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email,
+          role: "STUDENT" // default role fallback
+        })
+        .select()
+        .single();
+        
+      if (!insertError) {
+        profile = newProfile;
+      }
+    } else if (profileError) {
+      console.error("Profile fetch error:", profileError);
+      throw new Error("Could not fetch user profile");
+    }
+
+    const fullUser = { 
+      ...profile, 
+      name: profile?.full_name || profile?.name || "Student", 
+      email: authData.user.email 
+    } as User;
+    
+    setUser(fullUser);
+    setToken(authData.session.access_token);
+    return fullUser;
   }
 
-  async function signup(signupData: SignupData) {
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(signupData),
+  async function signup(signupData: SignupData): Promise<User> {
+    console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("Browser:", typeof window !== "undefined");
+
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: signupData.email,
+      password: signupData.password,
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Signup failed");
+    if (authError) throw authError;
 
-    localStorage.setItem("auth_token", data.token);
-    setToken(data.token);
-    setUser(data.user);
+    if (!authData.user) {
+      throw new Error("User not returned from Supabase");
+    }
 
-    const role = data.user.role.toLowerCase();
-    if (role === "professor") router.push("/dashboard/professor");
-    else router.push("/dashboard/student");
+    // Insert into profiles
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: authData.user.id,
+        email: signupData.email,
+        full_name: signupData.name,
+        role: signupData.role,
+        university: signupData.university || null,
+        department: signupData.department || null,
+        bio: signupData.bio || null,
+      });
+
+    if (profileError) {
+      console.error("FULL PROFILE ERROR:", JSON.stringify(profileError, null, 2));
+      throw new Error("Account created, but failed to create profile");
+    }
+
+    // We can fetch the newly created profile to ensure all defaults are present, or just construct it.
+    const fullUser = { 
+      id: authData.user.id,
+      email: authData.user.email,
+      name: signupData.name, // Map it back to 'name' for the frontend interface
+      role: signupData.role,
+      university: signupData.university || null,
+      department: signupData.department || null,
+      bio: signupData.bio || null,
+      skills: [],
+      interests: []
+    } as User;
+    
+    setUser(fullUser);
+    setToken(authData.session?.access_token || null);
+    return fullUser;
   }
 
   async function logout() {
-    await fetch("/api/auth/me", { method: "DELETE" });
-    localStorage.removeItem("auth_token");
-    setToken(null);
+    await supabase.auth.signOut();
     setUser(null);
+    setToken(null);
     router.push("/login");
   }
 

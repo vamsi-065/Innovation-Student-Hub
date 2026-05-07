@@ -61,13 +61,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navItems =
     user.role === "ADMIN" ? adminNav
-    : user.role === "PROFESSOR" ? professorNav
-    : studentNav;
+      : user.role === "PROFESSOR" ? professorNav
+        : studentNav;
 
   const roleColor =
     user.role === "ADMIN" ? "#f59e0b"
-    : user.role === "PROFESSOR" ? "#06b6d4"
-    : "#7c3aed";
+      : user.role === "PROFESSOR" ? "#06b6d4"
+        : "#7c3aed";
 
   return (
     <div className="min-h-screen bg-mesh" style={{ background: "var(--hub-bg)" }}>
@@ -137,7 +137,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href || (href !== `/dashboard/${user.role.toLowerCase()}` && pathname.startsWith(href));
+            const active = pathname === href || (href !== `/dashboard/${user?.role?.toLowerCase() || "student"}` && pathname.startsWith(href));
             return (
               <Link key={href} href={href}>
                 <div className={`sidebar-item ${active ? "active" : ""}`} title={!sidebarOpen ? label : undefined}>

@@ -1,14 +1,18 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
 // POST /api/reviews — submit a review (professor only)
 export async function POST(req: NextRequest) {
   try {
-    const authUser = getAuthUser(req);
-    if (!authUser) return apiError("Unauthorized", 401);
-    if (authUser.role !== "PROFESSOR" && authUser.role !== "ADMIN") {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return apiError("Unauthorized", 401);
+
+    // Check role
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (profile?.role !== "PROFESSOR" && profile?.role !== "ADMIN") {
       return apiError("Only professors can submit reviews", 403);
     }
 
@@ -18,43 +22,25 @@ export async function POST(req: NextRequest) {
     if (!ideaId || !content) {
       return apiError("Idea ID and content are required", 400);
     }
-    if (rating < 1 || rating > 5) {
-      return apiError("Rating must be between 1 and 5", 400);
-    }
 
-    // Check idea exists
-    const idea = await prisma.idea.findUnique({ where: { id: ideaId } });
-    if (!idea) return apiError("Idea not found", 404);
-
-    // Prevent duplicate review from same professor
-    const existing = await prisma.review.findFirst({
-      where: { ideaId, professorId: authUser.userId },
-    });
-    if (existing) return apiError("You have already reviewed this idea", 409);
-
-    const review = await prisma.review.create({
-      data: {
-        ideaId,
-        professorId: authUser.userId,
+    // Insert review
+    const { data: review, error: insertError } = await supabase
+      .from("reviews")
+      .insert({
+        idea_id: ideaId,
+        professor_id: user.id,
         content,
         rating: Number(rating),
         status: status || "PENDING",
         feedback,
-      },
-      include: {
-        professor: { select: { id: true, name: true, avatar: true, department: true } },
-      },
-    });
+      })
+      .select(`
+        *,
+        professor:profiles!reviews_professor_id_fkey(id, name, avatar)
+      `)
+      .single();
 
-    // Notify idea author
-    await prisma.notification.create({
-      data: {
-        userId: idea.authorId,
-        type: "REVIEW_SUBMITTED",
-        content: `Professor reviewed your idea "${idea.title}"`,
-        link: `/dashboard/student/ideas/${ideaId}`,
-      },
-    });
+    if (insertError) throw insertError;
 
     return apiSuccess(review, 201);
   } catch (err) {
@@ -66,16 +52,22 @@ export async function POST(req: NextRequest) {
 // GET /api/reviews?ideaId=xxx — get reviews for an idea
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const ideaId = searchParams.get("ideaId");
 
-    const reviews = await prisma.review.findMany({
-      where: ideaId ? { ideaId } : {},
-      include: {
-        professor: { select: { id: true, name: true, avatar: true, department: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    let query = supabase
+      .from("reviews")
+      .select(`
+        *,
+        professor:profiles!reviews_professor_id_fkey(id, name, avatar)
+      `);
+
+    if (ideaId) query = query.eq("idea_id", ideaId);
+
+    const { data: reviews, error } = await query.order("created_at", { ascending: false });
+
+    if (error) throw error;
 
     return apiSuccess(reviews);
   } catch (err) {
@@ -83,3 +75,4 @@ export async function GET(req: NextRequest) {
     return apiError("Internal server error", 500);
   }
 }
+

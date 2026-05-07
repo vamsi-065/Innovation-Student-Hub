@@ -52,7 +52,7 @@ export async function POST(
       },
     });
 
-    return apiSuccess(member, 201);
+    return apiSuccess({ message: "Join request sent" });
   } catch (err) {
     console.error("[TEAM JOIN]", err);
     return apiError("Internal server error", 500);

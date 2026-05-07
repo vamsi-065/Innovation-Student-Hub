@@ -1,249 +1,194 @@
-# 🚀 Student Innovation Hub
-
 <div align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss" />
-  <img src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Neon-blue?logo=postgresql" />
-  <img src="https://img.shields.io/badge/Socket.io-4-010101?logo=socket.io" />
+
+# IdeaForge
+### Fueling the Future of Collaborative Innovation
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+---
+
+**IdeaForge** is a premium, LinkedIn-inspired collaborative ecosystem designed specifically for university innovation hubs. It bridges the gap between ambitious students, expert faculty, and administrative moderators to transform raw concepts into reality.
+
 </div>
 
-<br />
+## 📖 Introduction
 
-> **Where student ideas take flight.** A full-stack collaborative platform for students to share startup ideas, find collaborators, and get mentorship from professors — with real-time messaging and Apple-inspired glassmorphism UI.
+In the rapidly evolving landscape of university innovation, students often struggle to find the right collaborators, while faculty members lack a streamlined way to provide expert guidance. **IdeaForge** solves this real-world problem by providing a centralized, high-performance platform where ideas are shared, teams are formed, and projects are nurtured under expert supervision.
+
+Built with a focus on high-end aesthetics and professional networking, IdeaForge replaces scattered communication channels with a unified, glassmorphism-inspired experience that fosters genuine academic growth and entrepreneurial success.
 
 ---
 
 ## ✨ Features
 
-| Feature | Details |
-|---------|---------|
-| 🔐 **JWT Authentication** | Signup/Login with HTTP-only cookies + localStorage |
-| 👥 **3 Role System** | Student, Professor, Admin with route protection |
-| 💡 **Idea Management** | Post, search, filter, like, and track project ideas |
-| 🤝 **Team Building** | Join/leave teams, manage members with status tracking |
-| 📝 **Professor Reviews** | Submit rated reviews with feedback and status |
-| 💬 **Real-time Chat** | Socket.io powered messaging with typing indicators |
-| 🔔 **Notifications** | In-app notifications for reviews, team requests |
-| 👤 **LinkedIn-style Profiles** | Skills badges, interests, social links, idea history |
-| 🛡️ **Admin Panel** | User management, role changes, platform analytics |
+- **🚀 Discovery Feed**: A vertical, scrollable feed of cutting-edge ideas with real-time interactions (Likes, Bookmarks, and Shares).
+- **🔐 Secure Authentication**: Multi-role authentication (Student, Professor, Admin) powered by Supabase Auth.
+- **🤝 Team Collaboration**: Effortlessly find teammates and join projects that align with your skills and interests.
+- **🔍 Advanced Search**: Global search functionality with standardized, high-contrast filtering by domain, tags, and keywords.
+- **📊 Interactive Dashboard**: Personalized metrics and project tracking for students and review panels for professors.
+- **👤 Profile Management**: Showcase your skills, interests, and past innovations with a professional, customizable profile.
+- **✨ Glassmorphism UI**: A stunning, modern design system featuring obsidian themes, smooth gradients, and micro-animations.
+- **📱 Fully Responsive**: A seamless experience across desktop, tablet, and mobile viewports.
+- **🛠️ Admin Control**: Comprehensive moderation tools for managing users, flags, and platform-wide analytics.
+- **💬 Real-time Interaction**: Instant updates and engagement through role-based interactions.
 
 ---
 
-## 🏗️ Tech Stack
+## 🛠️ Tech Stack
 
-```
-Frontend:  Next.js 14 (App Router) + TypeScript + Tailwind CSS v4
-UI:        Glassmorphism design + Framer Motion animations + lucide-react
-Backend:   Next.js API Routes + Custom Node.js server
-Database:  PostgreSQL (Neon) via Prisma ORM
-Auth:      JWT (jsonwebtoken) + bcryptjs + HTTP-only cookies
-Realtime:  Socket.io (custom server)
-Validation: Zod
-```
+### Frontend
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
+- **State & UI**: [Framer Motion](https://www.framer.com/motion/), [Radix UI](https://www.radix-ui.com/), [Lucide React](https://lucide.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+
+### Backend & Infrastructure
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Authentication**: [Supabase SSR Auth](https://supabase.com/docs/guides/auth/server-side/nextjs)
+- **Real-time**: [Socket.io](https://socket.io/) (Infrastructure ready)
+- **Deployment**: [Vercel](https://vercel.com/)
 
 ---
 
-## 📁 Project Structure
+---
 
-```
+## 📂 Folder Structure
+
+```text
 student-innovation-hub/
-├── app/
-│   ├── (auth)/
-│   │   ├── login/page.tsx          # Login page
-│   │   └── signup/page.tsx         # Signup with role selector
-│   ├── (dashboard)/
-│   │   ├── layout.tsx              # Collapsible sidebar shell
-│   │   ├── student/page.tsx        # Student idea feed
-│   │   ├── professor/page.tsx      # Professor review queue
-│   │   ├── admin/page.tsx          # Admin panel
-│   │   └── profile/
-│   │       ├── [id]/page.tsx       # LinkedIn-style profile
-│   │       └── edit/page.tsx       # Editable profile
-│   ├── api/
-│   │   ├── auth/                   # signup, login, me
-│   │   ├── ideas/                  # CRUD + like toggle
-│   │   ├── users/                  # Profile GET/PATCH
-│   │   ├── reviews/                # Professor reviews
-│   │   ├── teams/                  # Join/leave teams
-│   │   ├── messages/               # Chat history
-│   │   └── admin/                  # Admin-only routes
-│   ├── globals.css                 # Design system
-│   ├── layout.tsx                  # Root layout + AuthProvider
-│   └── page.tsx                    # Landing page
-├── context/
-│   └── AuthContext.tsx             # Auth state + JWT management
-├── lib/
-│   ├── auth.ts                     # JWT helpers
-│   ├── prisma.ts                   # Singleton Prisma client
-│   └── utils.ts                    # cn(), formatDate, etc.
-├── prisma/
-│   ├── schema.prisma               # Full DB schema
-│   └── seed.ts                     # Demo data seeder
-├── middleware.ts                   # JWT + role-based protection
-├── server.ts                       # Custom Next.js + Socket.io
-├── tsconfig.server.json            # Server-side TS config
-└── .env.example                    # Environment template
+├── app/                  # Next.js App Router (Pages & API Routes)
+│   ├── api/              # Server-side API endpoints
+│   ├── dashboard/        # Protected role-based layouts & views
+│   └── (auth)/           # Authentication flows (Login/Signup)
+├── components/           # Reusable UI components
+│   ├── ui/               # Base Radix/Tailwind components
+│   └── SearchInput.tsx   # Standardized search component
+├── context/              # React Context (Auth, Theme)
+├── lib/                  # Utility functions & shared config
+├── prisma/               # Database schema & migrations
+├── public/               # Static assets & screenshots
+└── globals.css           # Global design system & theme tokens
 ```
 
 ---
 
-## 🚦 User Roles
+## ⚙️ Installation Guide
 
-### 🎓 Student
-- Post and manage project ideas
-- Browse and search ideas from peers
-- Join teams and request collaboration
-- Message collaborators in real-time
-- Receive professor reviews on your ideas
-
-### 👨‍🏫 Professor
-- View all open ideas needing review
-- Submit rated reviews with detailed feedback
-- Mark ideas as Approved/Rejected/Pending
-- Message students directly
-
-### 🛡️ Admin
-- Full platform overview with analytics
-- Manage all users (view, change role, delete)
-- Moderate ideas and content
-- Access all platform data
-
----
-
-## ⚡ Quick Start
-
-### 1. Clone & Install
-
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/student-innovation-hub.git
-cd student-innovation-hub
+git clone https://github.com/your-username/ideaforge.git
+cd ideaforge
+```
+
+### 2. Install Dependencies
+```bash
 npm install
 ```
 
-### 2. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
+### 3. Configure Environment Variables
+Create a `.env.local` file in the root directory and add the following:
 
 ```env
-# Get from: https://neon.tech → New Project → Connection String
-DATABASE_URL="postgresql://USER:PASS@ep-xxxx.neon.tech/neondb?sslmode=require"
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-JWT_SECRET="your-super-secret-key"
+# Database Connection (Prisma)
+DATABASE_URL=your_postgresql_connection_string
+DIRECT_URL=your_direct_connection_string
 
-NEXTAUTH_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_SOCKET_URL="http://localhost:3000"
+# Auth Secrets
+JWT_SECRET=your_jwt_secret
 ```
 
-### 3. Push Database Schema
+> **Where to get these?**
+> - Create a project on [Supabase Dashboard](https://app.supabase.com).
+> - Obtain URL and Anon Key from **Project Settings > API**.
+> - Get connection strings from **Project Settings > Database**.
 
+### 4. Setup Database
 ```bash
-npm run db:push
+npx prisma generate
+npx prisma db push
 ```
 
-### 4. Seed Demo Data
-
-```bash
-npm run db:seed
-```
-
-This creates:
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@innovationhub.dev | Admin@123456 |
-| Professor | prof.smith@innovationhub.dev | Professor@123 |
-| Student | student@innovationhub.dev | Student@123 |
-
-### 5. Run Development Server
-
+### 5. Run Locally
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-> **Note**: `npm run dev` starts the custom Socket.io server. Use `npm run dev:next` if you want to run without Socket.io (API routes only).
+Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ---
 
-## 📡 API Reference
+## 🚀 Deployment Guide
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/auth/signup` | POST | None | Create account |
-| `/api/auth/login` | POST | None | Login |
-| `/api/auth/me` | GET | JWT | Get current user |
-| `/api/auth/me` | DELETE | JWT | Logout |
-| `/api/ideas` | GET | None | List ideas (search, filter) |
-| `/api/ideas` | POST | Student | Create idea |
-| `/api/ideas/:id` | GET | None | Idea detail |
-| `/api/ideas/:id` | PATCH | Author/Admin | Update idea |
-| `/api/ideas/:id` | DELETE | Author/Admin | Delete idea |
-| `/api/ideas/:id/like` | POST | JWT | Toggle like |
-| `/api/users/:id` | GET | JWT | User profile |
-| `/api/users/:id` | PATCH | Owner | Update profile |
-| `/api/reviews` | POST | Professor | Submit review |
-| `/api/reviews` | GET | JWT | List reviews |
-| `/api/teams/:ideaId/join` | POST | Student | Join team |
-| `/api/teams/:ideaId/join` | DELETE | Student | Leave team |
-| `/api/messages/:roomId` | GET | JWT | Chat history |
-| `/api/messages/:roomId` | POST | JWT | Send message |
-| `/api/admin/users` | GET | Admin | All users |
-| `/api/admin/users` | PATCH | Admin | Change role |
-| `/api/admin/users` | DELETE | Admin | Delete user |
+### Deploying to Vercel
+1.  Push your code to a GitHub repository.
+2.  Login to [Vercel](https://vercel.com) and click **"Add New Project"**.
+3.  Import the `ideaforge` repository.
+4.  Add your `.env.local` variables in the **Environment Variables** section.
+5.  Click **Deploy**. Vercel will handle automatic deployments on every `git push`.
 
 ---
 
-## 🔌 Socket.io Events
+## ⚠️ Current Limitations & Drawbacks
 
-| Event | Direction | Payload |
-|-------|-----------|---------|
-| `join_room` | Client → Server | `roomId: string` |
-| `leave_room` | Client → Server | `roomId: string` |
-| `send_message` | Client → Server | `{ roomId, receiverId, content }` |
-| `new_message` | Server → Client | Message object |
-| `typing_start` | Client → Server | `roomId: string` |
-| `typing_stop` | Client → Server | `roomId: string` |
-| `user_typing` | Server → Client | `{ userId, name }` |
-| `notification` | Server → Client | `{ type, content }` |
+- **UI Responsiveness**: While mostly responsive, some complex dashboard views require further refinement for extra-small devices.
+- **Search Optimization**: Currently performs basic database filtering; implementation of fuzzy search or Algolia is pending.
+- **Chat System**: The real-time messaging infrastructure is partially implemented but requires full integration with the UI.
+- **Notifications**: System alerts are localized; global real-time notifications via Supabase Realtime are under development.
+- **Performance**: High-resolution glassmorphism effects can be resource-intensive; lazy loading and image optimization are ongoing.
 
 ---
 
-## 🗄️ Database Schema
+## 🛠️ How You Can Contribute
 
-```
-User ──< Idea ──< Review
-     ──< TeamMember >── Team >── Idea
-     ──< Message (sender/receiver)
-     ──< Notification
-     ──< IdeaLike >── Idea
-```
-
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended for frontend)
-
-```bash
-npm run build
-vercel deploy
-```
-
-> Note: Socket.io requires a Node.js server. Deploy the custom server separately or use a service like Railway/Render for WebSocket support.
-
-### Environment variables on Vercel:
-Add all variables from `.env.example` to Vercel project settings.
+Help us solve the current limitations and make IdeaForge even better:
+- **Responsive Layouts**: Refine Tailwind classes for edge-case mobile viewports.
+- **State Management**: Integrate [Zustand](https://github.com/pmndrs/zustand) for more robust global state management.
+- **Accessibility (a11y)**: Audit components for ARIA compliance and keyboard navigation.
+- **Testing**: Implement unit tests with [Jest](https://jestjs.io/) and E2E tests with [Cypress](https://www.cypress.io/).
+- **API Performance**: Optimize Prisma queries and implement Redis caching for the main feed.
 
 ---
 
-## 📝 License
+## 🔮 Future Scope
 
-MIT © 2025 Student Innovation Hub
+- **🤖 AI Recommendation**: Smart project matching based on student skills and interests using OpenAI.
+- **💬 Real-time Workspace**: Integrated collaborative chat and file sharing within project teams.
+- **🌓 Dynamic Themes**: Expanded theme system with customizable accent colors.
+- **📈 Advanced Analytics**: Deep insights for university administrators to track innovation trends.
+- **📱 PWA Support**: Transform the hub into a Progressive Web App for offline access and native feel.
+
+---
+
+## 🤝 Contribution Guide
+
+1.  **Fork** the repository.
+2.  Create a new **Branch** (`git checkout -b feature/AmazingFeature`).
+3.  **Commit** your changes (`git commit -m 'Add some AmazingFeature'`).
+4.  **Push** to the branch (`git push origin feature/AmazingFeature`).
+5.  Open a **Pull Request**.
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📬 Contact
+
+- **GitHub**: [YourProfile](https://github.com/your-username)
+- **LinkedIn**: [YourName](https://linkedin.com/in/your-profile)
+- **Email**: [your.email@example.com](mailto:your.email@example.com)
+
+<div align="center">
+Built with ❤️ by the IdeaForge Team.
+</div>

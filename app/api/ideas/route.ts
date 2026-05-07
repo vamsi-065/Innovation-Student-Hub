@@ -1,62 +1,71 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
 // GET /api/ideas — list with filters, search, pagination
 export async function GET(req: NextRequest) {
   try {
+    const supabase = await createClient();
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || undefined;
-    const domain = searchParams.get("domain") || undefined;
-    const tag = searchParams.get("tag") || undefined;
+    const tab = searchParams.get("tab") || "discovery";
+    const status = searchParams.get("status");
+    const domain = searchParams.get("domain");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "12");
-    const skip = (page - 1) * limit;
+    
+    let query = supabase
+      .from("ideas")
+      .select(`
+        *,
+        author:profiles(id, name, avatar, role, full_name),
+        _count_likes:idea_likes(count),
+        _count_reviews:reviews(count)
+      `);
 
-    const where: Record<string, unknown> = {
-      ...(search && {
-        OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-        ],
-      }),
-      ...(status && { status }),
-      ...(domain && { domain }),
-      ...(tag && { tags: { has: tag } }),
-    };
+    // Filtering
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+    if (status) query = query.eq("status", status);
+    if (domain) query = query.eq("domain", domain);
 
-    const [ideas, total] = await Promise.all([
-      prisma.idea.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          author: {
-            select: { id: true, name: true, avatar: true, role: true },
-          },
-          _count: { select: { likes: true, reviews: true } },
-          team: {
-            select: { _count: { select: { members: true } } },
-          },
-        },
-      }),
-      prisma.idea.count({ where }),
-    ]);
+    // Tab-based sorting
+    if (tab === "trending") {
+      query = query.order("views", { ascending: false });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    // Pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+
+    const { data: ideas, error, count } = await query;
+
+    if (error) throw error;
+
+    // Format for frontend consistency
+    const formattedIdeas = ideas?.map(idea => ({
+      ...idea,
+      createdAt: idea.created_at,
+      author: idea.author ? {
+        ...idea.author,
+        name: (idea.author as any).full_name || (idea.author as any).name || "Innovator"
+      } : null,
+      _count: {
+        likes: idea._count_likes?.[0]?.count || 0,
+        reviews: idea._count_reviews?.[0]?.count || 0
+      }
+    }));
 
     return apiSuccess({
-      ideas,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      ideas: formattedIdeas,
+      pagination: { page, limit, total: count || 0 }
     });
   } catch (err) {
-    console.error("[IDEAS GET]", err);
+    console.error("[IDEAS GET] Full Error:", JSON.stringify(err, null, 2));
     return apiError("Internal server error", 500);
   }
 }
@@ -64,46 +73,43 @@ export async function GET(req: NextRequest) {
 // POST /api/ideas — create new idea (student only)
 export async function POST(req: NextRequest) {
   try {
-    const authUser = getAuthUser(req);
-    if (!authUser) return apiError("Unauthorized", 401);
-    if (authUser.role === "PROFESSOR")
-      return apiError("Professors cannot post ideas", 403);
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) return apiError("Unauthorized", 401);
 
     const body = await req.json();
-    const { title, description, tags, domain, stage, teamSize, lookingFor, coverImage } = body;
+    const { title, description, tags, domain, stage, team_size, looking_for, cover_image } = body;
 
     if (!title || !description) {
       return apiError("Title and description are required", 400);
     }
 
-    const idea = await prisma.idea.create({
-      data: {
+    const { data: idea, error: insertError } = await supabase
+      .from("ideas")
+      .insert({
         title,
         description,
         tags: tags || [],
         domain,
         stage,
-        teamSize: teamSize || 1,
-        lookingFor: lookingFor || [],
-        coverImage,
-        authorId: authUser.userId,
-      },
-      include: {
-        author: { select: { id: true, name: true, avatar: true } },
-      },
-    });
+        team_size: team_size || 1,
+        looking_for: looking_for || [],
+        cover_image,
+        author_id: user.id,
+      })
+      .select(`
+        *,
+        author:profiles(id, name, avatar)
+      `)
+      .single();
+
+    if (insertError) throw insertError;
 
     // Auto-create team for the idea
-    await prisma.team.create({
-      data: {
-        ideaId: idea.id,
-        members: {
-          create: {
-            userId: authUser.userId,
-            role: "Founder",
-          },
-        },
-      },
+    await supabase.from("teams").insert({
+      idea_id: idea.id,
+      creator_id: user.id
     });
 
     return apiSuccess(idea, 201);
@@ -112,3 +118,4 @@ export async function POST(req: NextRequest) {
     return apiError("Internal server error", 500);
   }
 }
+

@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
-import { Role } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
+
+export type Role = "STUDENT" | "PROFESSOR" | "ADMIN";
 
 export interface JWTPayload {
   userId: string;
@@ -10,6 +11,7 @@ export interface JWTPayload {
   role: Role;
   name: string;
 }
+
 
 export function signToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });

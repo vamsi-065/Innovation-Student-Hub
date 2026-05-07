@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
+import { createClient } from "@/lib/supabaseServer";
 import { getAuthUser } from "@/lib/auth";
 import { apiError, apiSuccess } from "@/lib/utils";
 
@@ -9,21 +9,26 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const authUser = getAuthUser(req);
-    if (!authUser) return apiError("Unauthorized", 401);
+    const { id: ideaId } = await params;
+    const supabase = await createClient();
+    
+    // Increment flags count
+    const { data: idea, error } = await supabase
+      .from("ideas")
+      .select("flags")
+      .eq("id", ideaId)
+      .single();
 
-    const idea = await prisma.idea.findUnique({ where: { id } });
-    if (!idea) return apiError("Idea not found", 404);
+    if (error || !idea) return apiError("Idea not found", 404);
 
-    const updatedIdea = await prisma.idea.update({
-      where: { id },
-      data: { flags: { increment: 1 } },
-    });
+    await supabase
+      .from("ideas")
+      .update({ flags: (idea.flags || 0) + 1 })
+      .eq("id", ideaId);
 
-    return apiSuccess({ message: "Idea flagged for review", flags: updatedIdea.flags }, 200);
+    return apiSuccess({ message: "Idea flagged for moderation" });
   } catch (err) {
-    console.error("[FLAG IDEA]", err);
+    console.error("[IDEA FLAG]", err);
     return apiError("Internal server error", 500);
   }
 }

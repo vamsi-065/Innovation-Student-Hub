@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
 export async function GET(
@@ -9,43 +8,34 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const supabase = await createClient();
 
-    const idea = await prisma.idea.findUnique({
-      where: { id },
-      include: {
-        author: {
-          select: {
-            id: true, name: true, avatar: true, role: true,
-            university: true, department: true, skills: true,
-          },
-        },
-        team: {
-          include: {
-            members: {
-              include: {
-                user: { select: { id: true, name: true, avatar: true, role: true, skills: true } },
-              },
-              where: { status: "ACTIVE" },
-            },
-          },
-        },
-        reviews: {
-          include: {
-            professor: { select: { id: true, name: true, avatar: true, department: true } },
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        likes: { select: { userId: true } },
-        _count: { select: { likes: true, reviews: true } },
-      },
-    });
+    const { data: idea, error } = await supabase
+      .from("ideas")
+      .select(`
+        *,
+        author:profiles!ideas_author_id_fkey(id, name, avatar, role),
+        _count_likes:idea_likes(count),
+        _count_reviews:reviews(count)
+      `)
+      .eq("id", id)
+      .single();
 
-    if (!idea) return apiError("Idea not found", 404);
+    if (error || !idea) return apiError("Idea not found", 404);
 
-    // Increment views
-    await prisma.idea.update({ where: { id }, data: { views: { increment: 1 } } });
+    // Increment views (simple RPC or manual update)
+    await supabase.from("ideas").update({ views: (idea.views || 0) + 1 }).eq("id", id);
 
-    return apiSuccess(idea);
+    // Format for frontend
+    const formattedIdea = {
+      ...idea,
+      _count: {
+        likes: idea._count_likes?.[0]?.count || 0,
+        reviews: idea._count_reviews?.[0]?.count || 0
+      }
+    };
+
+    return apiSuccess(formattedIdea);
   } catch (err) {
     console.error("[IDEA GET]", err);
     return apiError("Internal server error", 500);
@@ -58,31 +48,43 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const authUser = getAuthUser(req);
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+
     if (!authUser) return apiError("Unauthorized", 401);
 
-    const idea = await prisma.idea.findUnique({ where: { id } });
-    if (!idea) return apiError("Idea not found", 404);
+    const body = await req.json();
+    
+    const { data: idea, error: fetchError } = await supabase
+      .from("ideas")
+      .select("author_id")
+      .eq("id", id)
+      .single();
 
-    if (idea.authorId !== authUser.userId && authUser.role !== "ADMIN") {
+    if (fetchError || !idea) return apiError("Idea not found", 404);
+
+    if (idea.author_id !== authUser.id) {
       return apiError("Not authorized to edit this idea", 403);
     }
 
-    const body = await req.json();
-    const updated = await prisma.idea.update({
-      where: { id },
-      data: {
+    const { data: updated, error: updateError } = await supabase
+      .from("ideas")
+      .update({
         ...(body.title && { title: body.title }),
         ...(body.description && { description: body.description }),
         ...(body.tags && { tags: body.tags }),
         ...(body.status && { status: body.status }),
         ...(body.domain !== undefined && { domain: body.domain }),
         ...(body.stage !== undefined && { stage: body.stage }),
-        ...(body.teamSize && { teamSize: body.teamSize }),
-        ...(body.lookingFor && { lookingFor: body.lookingFor }),
-        ...(body.coverImage !== undefined && { coverImage: body.coverImage }),
-      },
-    });
+        ...(body.team_size && { team_size: body.team_size }),
+        ...(body.looking_for && { looking_for: body.looking_for }),
+        ...(body.cover_image !== undefined && { cover_image: body.cover_image }),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
 
     return apiSuccess(updated);
   } catch (err) {
@@ -97,20 +99,23 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const authUser = getAuthUser(req);
+    const supabase = await createClient();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+
     if (!authUser) return apiError("Unauthorized", 401);
 
-    const idea = await prisma.idea.findUnique({ where: { id } });
-    if (!idea) return apiError("Idea not found", 404);
+    const { error } = await supabase
+      .from("ideas")
+      .delete()
+      .eq("id", id)
+      .eq("author_id", authUser.id);
 
-    if (idea.authorId !== authUser.userId && authUser.role !== "ADMIN") {
-      return apiError("Not authorized to delete this idea", 403);
-    }
+    if (error) throw error;
 
-    await prisma.idea.delete({ where: { id } });
     return apiSuccess({ message: "Idea deleted" });
   } catch (err) {
     console.error("[IDEA DELETE]", err);
     return apiError("Internal server error", 500);
   }
 }
+

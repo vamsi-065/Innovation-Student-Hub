@@ -1,35 +1,36 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getAuthUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// Toggle like on an idea
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const authUser = getAuthUser(req);
-    if (!authUser) return apiError("Unauthorized", 401);
+    const { id: ideaId } = await params;
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const existing = await prisma.ideaLike.findUnique({
-      where: { ideaId_userId: { ideaId: id, userId: authUser.userId } },
-    });
+    if (!user) return apiError("Unauthorized", 401);
+
+    const { data: existing, error: checkError } = await supabase
+      .from("idea_likes")
+      .select()
+      .eq("idea_id", ideaId)
+      .eq("user_id", user.id)
+      .single();
 
     if (existing) {
-      await prisma.ideaLike.delete({
-        where: { ideaId_userId: { ideaId: id, userId: authUser.userId } },
-      });
+      // Unlike
+      await supabase.from("idea_likes").delete().eq("idea_id", ideaId).eq("user_id", user.id);
       return apiSuccess({ liked: false });
     } else {
-      await prisma.ideaLike.create({
-        data: { ideaId: id, userId: authUser.userId },
-      });
+      // Like
+      await supabase.from("idea_likes").insert({ idea_id: ideaId, user_id: user.id });
       return apiSuccess({ liked: true });
     }
   } catch (err) {
-    console.error("[LIKE]", err);
+    console.error("[IDEA LIKE]", err);
     return apiError("Internal server error", 500);
   }
 }

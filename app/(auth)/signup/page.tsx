@@ -5,9 +5,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { Sparkles, Eye, EyeOff, GraduationCap, BookOpen, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const { signup } = useAuth();
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -32,6 +34,9 @@ export default function SignupPage() {
     setError("");
     try {
       await signup(form);
+      
+      // Explicit redirect after success
+      router.push("/login");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Signup failed");
     } finally {
@@ -40,7 +45,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-hero flex items-center justify-center p-4">
+    <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,17 +58,17 @@ export default function SignupPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center">
               <Sparkles size={18} className="text-white" />
             </div>
-            <span className="text-white font-bold text-xl">InnovationHub</span>
+            <span className="text-[var(--hub-text)] font-bold text-xl">InnovationHub</span>
           </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Create your account</h1>
-          <p className="text-zinc-400 text-sm">Join the community of student innovators</p>
+          <h1 className="text-3xl font-bold text-[var(--hub-text)] mb-2">Create your account</h1>
+          <p className="text-[var(--hub-text-muted)] text-sm">Join the community of student innovators</p>
         </div>
 
         {/* Form Card */}
         <div className="glass-card p-8">
           {/* Role Selector */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-zinc-300 mb-3">I am a...</label>
+            <label className="block text-sm font-medium text-[var(--hub-text-muted)] mb-3">I am a...</label>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { value: "STUDENT", label: "Student", icon: GraduationCap, desc: "Post & explore ideas" },
@@ -76,13 +81,12 @@ export default function SignupPage() {
                     key={r.value}
                     type="button"
                     onClick={() => setForm((p) => ({ ...p, role: r.value as "STUDENT" | "PROFESSOR" }))}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      active
-                        ? "border-violet-500/50 bg-violet-500/10 text-white"
-                        : "border-white/8 bg-white/3 text-zinc-400 hover:border-white/15"
-                    }`}
+                    className={`p-4 rounded-xl border text-left transition-all ${active
+                        ? "border-sky-500/50 bg-sky-500/10 text-[var(--hub-text)]"
+                        : "border-[var(--hub-border)] bg-[var(--hub-surface-2)] text-[var(--hub-text-muted)] hover:border-[var(--hub-border-hover)]"
+                      }`}
                   >
-                    <Icon size={20} className={`mb-2 ${active ? "text-violet-400" : "text-zinc-500"}`} />
+                    <Icon size={20} className={`mb-2 ${active ? "text-sky-500" : "text-[var(--hub-text-subtle)]"}`} />
                     <div className="text-sm font-semibold">{r.label}</div>
                     <div className="text-xs opacity-70 mt-0.5">{r.desc}</div>
                   </button>
@@ -95,7 +99,7 @@ export default function SignupPage() {
             {/* Name + Email */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Full Name *</label>
+                <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Full Name *</label>
                 <input
                   name="name"
                   type="text"
@@ -108,7 +112,7 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Email *</label>
+                <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Email *</label>
                 <input
                   name="email"
                   type="email"
@@ -124,7 +128,7 @@ export default function SignupPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Password *</label>
+              <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Password *</label>
               <div className="relative">
                 <input
                   name="password"
@@ -140,7 +144,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--hub-text-subtle)] hover:text-[var(--hub-text-muted)] transition-colors"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -150,7 +154,7 @@ export default function SignupPage() {
             {/* University + Department */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">University</label>
+                <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">University</label>
                 <input
                   name="university"
                   type="text"
@@ -162,7 +166,7 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Department</label>
+                <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Department</label>
                 <input
                   name="department"
                   type="text"
@@ -177,7 +181,7 @@ export default function SignupPage() {
 
             {/* Bio */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Short Bio</label>
+              <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Short Bio</label>
               <textarea
                 name="bio"
                 value={form.bio}
@@ -224,7 +228,7 @@ export default function SignupPage() {
             </motion.button>
           </form>
 
-          <p className="text-center text-sm text-zinc-500 mt-6">
+          <p className="text-center text-sm text-[var(--hub-text-subtle)] mt-6">
             Already have an account?{" "}
             <Link href="/login" className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
               Sign in
@@ -232,7 +236,7 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <p className="text-center text-xs text-zinc-600 mt-4">
+        <p className="text-center text-xs text-[var(--hub-text-subtle)] mt-4">
           By creating an account, you agree to our Terms of Service and Privacy Policy.
         </p>
       </motion.div>
