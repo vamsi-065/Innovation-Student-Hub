@@ -97,7 +97,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name + Email */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Full Name *</label>
                 <input
@@ -152,7 +152,7 @@ export default function SignupPage() {
             </div>
 
             {/* University + Department */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">University</label>
                 <input

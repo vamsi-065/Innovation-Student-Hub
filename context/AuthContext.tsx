@@ -101,13 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If no profile is found, automatically create it
       if (error && error.code === "PGRST116") {
-        const { data: newProfile, error: insertError } = await supabase
+        const { data: newProfile, error: upsertError } = await supabase
           .from("profiles")
-          .insert({ id: userId, email: email, role: "STUDENT" })
+          .upsert({ id: userId, email: email, role: "STUDENT" })
           .select()
           .single();
           
-        if (!insertError) {
+        if (!upsertError) {
           data = newProfile;
           error = null;
         }
@@ -143,9 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Handle missing profile for existing users
     if (profileError && profileError.code === "PGRST116") {
-      const { data: newProfile, error: insertError } = await supabase
+      const { data: newProfile, error: upsertError } = await supabase
         .from("profiles")
-        .insert({
+        .upsert({
           id: authData.user.id,
           email: authData.user.email,
           role: "STUDENT" // default role fallback
@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select()
         .single();
         
-      if (!insertError) {
+      if (!upsertError) {
         profile = newProfile;
       }
     } else if (profileError) {
@@ -179,6 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: signupData.email,
       password: signupData.password,
+      options: {
+        data: {
+          name: signupData.name,
+          full_name: signupData.name,
+          role: signupData.role,
+        }
+      }
     });
 
     if (authError) throw authError;
@@ -187,29 +194,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("User not returned from Supabase");
     }
 
-    // Insert into profiles
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: authData.user.id,
-        email: signupData.email,
-        full_name: signupData.name,
-        role: signupData.role,
-        university: signupData.university || null,
-        department: signupData.department || null,
-        bio: signupData.bio || null,
-      });
+    console.log("SIGNUP SUCCESS. SESSION:", authData.session ? "PRESENT" : "MISSING (Email confirmation may be enabled)");
 
-    if (profileError) {
-      console.error("FULL PROFILE ERROR:", JSON.stringify(profileError, null, 2));
-      throw new Error("Account created, but failed to create profile");
+    // If session is missing, it means the user must confirm their email first.
+    // In this state, RLS will likely block the manual profile insert below.
+    if (!authData.session) {
+      console.warn("No session after signup. Profile creation might fail if RLS is enabled and email confirmation is required.");
     }
 
-    // We can fetch the newly created profile to ensure all defaults are present, or just construct it.
+    // Insert into profiles
+    // Note: If you applied the 'handle_new_user' trigger, this manual insert might 
+    // fail with a duplicate key error, which is fine—it means the trigger worked!
+    console.log("PREPARING PROFILE INSERT FOR ID:", authData.user.id);
+    const profilePayload = {
+      id: authData.user.id,
+      email: signupData.email,
+      name: signupData.name,
+      full_name: signupData.name, 
+      role: signupData.role,
+      university: signupData.university || null,
+      department: signupData.department || null,
+      bio: signupData.bio || null,
+    };
+    
+    const { data: profileResult, error: profileError } = await supabase
+      .from("profiles")
+      .upsert(profilePayload, { onConflict: "id" })
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error("PROFILE SETUP FAILED:", profileError);
+      throw new Error(`Account created, but profile setup failed: ${profileError.message}`);
+    }
+
+    console.log("PROFILE INSERT SUCCESS:", profileResult || "Created by trigger");
+
     const fullUser = { 
       id: authData.user.id,
       email: authData.user.email,
-      name: signupData.name, // Map it back to 'name' for the frontend interface
+      name: signupData.name,
       role: signupData.role,
       university: signupData.university || null,
       department: signupData.department || null,

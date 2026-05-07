@@ -63,7 +63,7 @@ export default function LoginPage() {
         <div className="glass-card p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Email address</label>
+              <label className="block text-xs font-medium text-[var(--hub-text-muted)] mb-1.5">Email address</label>
               <input
                 type="email"
                 value={email}
@@ -75,14 +75,14 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-[var(--hub-text-muted)]">Password</label>
                 <button type="button" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
                   Forgot password?
                 </button>
               </div>
-              <div className="relative">
+              <div className="relative w-full">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}

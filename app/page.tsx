@@ -106,8 +106,7 @@ export default function LandingPage() {
       </nav>
 
       {/* SECTION 1: Hero */}
-      <section className="h-screen w-full snap-start snap-always shrink-0 flex flex-col items-center justify-center text-center px-4 relative overflow-hidden z-10 pt-16">
-        
+      <section className="relative min-h-[100vh] w-full snap-start snap-always flex flex-col items-center justify-center text-center px-4 z-10 py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -123,24 +122,24 @@ export default function LandingPage() {
             <span>Built for the next generation of innovators</span>
           </motion.div>
 
-          <h1 className="font-display text-6xl md:text-8xl text-[var(--hub-text)] mb-6 leading-[1.05] tracking-tight">
+          <h1 className="font-display text-4xl sm:text-6xl md:text-8xl text-white mb-6 leading-[1.05] tracking-tight">
             Where Student <br />
             <span className="gradient-text-blue">Ideas Take Flight</span>
           </h1>
 
-          <p className="text-xl text-[var(--hub-text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
             Share your startup ideas, find talented collaborators, and get expert
             guidance from professors — all in one powerful platform.
           </p>
 
-          <div className="flex items-center justify-center gap-6 flex-wrap">
+          <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap">
             <Link href="/signup">
-              <MagneticButton className="btn-primary flex items-center gap-2 text-base py-4 px-10 shadow-[0_0_40px_rgba(14,165,233,0.3)]">
+              <MagneticButton className="btn-primary flex items-center gap-2 text-base py-4 px-8 md:px-10 shadow-[0_0_40px_rgba(14,165,233,0.3)]">
                 Start Building <ArrowRight size={18} />
               </MagneticButton>
             </Link>
             <Link href="/login">
-              <MagneticButton className="btn-ghost flex items-center gap-2 text-base py-4 px-10 border-[var(--hub-border)] hover:border-[var(--hub-border-hover)]">
+              <MagneticButton className="btn-ghost flex items-center gap-2 text-base py-4 px-8 md:px-10 border-white/10 hover:border-white/30 text-white">
                 Sign In
               </MagneticButton>
             </Link>
@@ -153,19 +152,19 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ amount: 0.5 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center justify-center gap-16 mt-20 flex-wrap border-t border-white/5 pt-10 w-full max-w-4xl"
+          className="flex items-center justify-center gap-8 md:gap-16 mt-12 md:mt-20 flex-wrap border-t border-white/5 pt-10 w-full max-w-4xl px-4"
         >
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="font-display text-4xl font-bold text-[var(--hub-text)] tracking-tight">{stat.value}</div>
-              <div className="text-sm font-medium text-cyan-600 dark:text-cyan-500/80 mt-1 uppercase tracking-wider">{stat.label}</div>
+              <div className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">{stat.value}</div>
+              <div className="text-xs md:text-sm font-medium text-cyan-400 mt-1 uppercase tracking-wider">{stat.label}</div>
             </div>
           ))}
         </motion.div>
       </section>
 
       {/* SECTION 2: Features */}
-      <section className="h-screen w-full snap-start snap-always shrink-0 flex flex-col justify-center items-center px-4 max-w-7xl mx-auto relative z-10 pt-16">
+      <section className="relative min-h-[100vh] w-full snap-start snap-always flex flex-col justify-center items-center px-4 max-w-7xl mx-auto z-10 py-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -173,10 +172,10 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="font-display text-5xl md:text-6xl text-[var(--hub-text)] mb-4 tracking-tight">
+          <h2 className="font-display text-4xl md:text-6xl text-white mb-4 tracking-tight">
             Everything You <span className="text-cyan-400">Need</span>
           </h2>
-          <p className="text-[var(--hub-text-muted)] text-lg max-w-2xl mx-auto">
+          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
             A complete ecosystem for student innovation — from idea conception to project completion.
           </p>
         </motion.div>
@@ -186,18 +185,18 @@ export default function LandingPage() {
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
-          viewport={{ amount: 0.2 }}
+          viewport={{ amount: 0.1 }}
         >
           {features.map((feature) => {
             const Icon = feature.icon;
             return (
               <motion.div key={feature.title} variants={itemVariants} className="h-full">
-                <TiltCard className="p-8 h-full border-white/5 hover:border-cyan-500/30 transition-colors duration-500 group flex flex-col justify-center">
+                <TiltCard className="p-8 h-full border-white/5 hover:border-cyan-500/30 transition-colors duration-500 group flex flex-col justify-center bg-slate-900/40 backdrop-blur-xl">
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 bg-white/5 group-hover:bg-cyan-500/10 transition-colors duration-500">
                     <Icon size={24} style={{ color: feature.color }} />
                   </div>
-                  <h3 className="font-display text-xl font-bold text-[var(--hub-text)] mb-3 group-hover:text-cyan-400 transition-colors duration-300">{feature.title}</h3>
-                  <p className="text-sm text-[var(--hub-text-muted)] leading-relaxed group-hover:text-zinc-300 transition-colors duration-300">{feature.description}</p>
+                  <h3 className="font-display text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">{feature.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">{feature.description}</p>
                 </TiltCard>
               </motion.div>
             );
@@ -206,46 +205,56 @@ export default function LandingPage() {
       </section>
 
       {/* SECTION 3: CTA & Footer */}
-      <section className="h-screen w-full snap-start snap-always shrink-0 flex flex-col items-center justify-center px-4 text-center relative z-10 pt-16">
-        
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 40 }}
-          whileInView={{ opacity: 1, scale: 1, y: 0 }}
-          viewport={{ amount: 0.5 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-4xl p-16 rounded-[2rem] border border-[var(--hub-border)] dark:border-cyan-500/20 bg-white dark:bg-gradient-to-b dark:from-cyan-900/20 dark:to-transparent shadow-xl dark:shadow-none overflow-hidden mb-auto mt-auto"
-        >
-          <div className="absolute inset-0 bg-cyan-500/5 blur-[100px] hidden dark:block" />
-          
-          <div className="relative z-10">
-            <Code size={48} className="text-cyan-400 mx-auto mb-8" />
-            <h2 className="font-display text-5xl md:text-6xl text-[var(--hub-text)] mb-6 tracking-tight">
-              Ready to <span className="gradient-text-blue">Innovate?</span>
-            </h2>
-            <p className="text-[var(--hub-text-muted)] text-xl mb-10 max-w-xl mx-auto">
-              Join hundreds of students already building the future.
-            </p>
-            <Link href="/signup">
-              <MagneticButton className="btn-primary text-lg py-5 px-12 shadow-[0_0_40px_rgba(14,165,233,0.3)]">
-                Create Free Account
-              </MagneticButton>
-            </Link>
-          </div>
-        </motion.div>
+      <section className="relative px-4 sm:px-6 lg:px-8 py-20 snap-start snap-always min-h-[100vh] flex flex-col justify-between">
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="max-w-5xl mx-auto w-full">
+            <div className="
+              relative overflow-hidden rounded-3xl
+              bg-slate-900/40
+              backdrop-blur-xl
+              border border-cyan-500/10
+              shadow-[0_0_60px_rgba(0,180,255,0.15)]
+              px-6 sm:px-10 py-16
+              text-center
+            ">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 pointer-events-none" />
 
-        {/* Embedded Footer so it stays at the very bottom of the last slide */}
-        <footer className="w-full border-t border-[var(--hub-border)] py-8 px-6 text-center bg-white dark:bg-[#030712]/50 backdrop-blur-lg">
+              <div className="relative z-10">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
+                  Ready to Innovate?
+                </h2>
+
+                <p className="mt-6 text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                  Join hundreds of students already building the future.
+                </p>
+
+                <Link href="/signup" className="inline-block">
+                  <button className="
+                    mt-8 px-8 py-4 rounded-xl
+                    bg-gradient-to-r from-cyan-500 to-blue-500
+                    text-white font-semibold
+                    hover:scale-105 transition-all
+                    shadow-[0_0_20px_rgba(6,182,212,0.3)]
+                  ">
+                    Create Free Account
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="w-full pt-12 pb-6 border-t border-white/5">
           <div className="flex items-center justify-center gap-2 mb-3">
             <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
               <Code size={12} className="text-white" />
             </div>
-            <span className="text-[var(--hub-text)] font-display font-bold">InnovationHub</span>
+            <span className="text-white font-display font-bold">InnovationHub</span>
           </div>
-          <p className="text-[var(--hub-text-subtle)] text-sm">© 2026 Student Innovation Hub. All rights reserved.</p>
+          <p className="text-slate-500 text-sm">© 2026 Student Innovation Hub. All rights reserved.</p>
         </footer>
-
       </section>
-
     </AuroraBackground>
   );
 }

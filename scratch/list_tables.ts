@@ -9,15 +9,23 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function test() {
-  const { data, error } = await supabase.rpc('get_tables'); // This might not work if RPC doesn't exist
+async function listTables() {
+  const { data, error } = await supabase.rpc('get_tables'); // This might not work if the function doesn't exist
   if (error) {
-     // Try standard query to information_schema if allowed
-     const { data: tables, error: tablesError } = await supabase.from('pg_catalog.pg_tables').select('tablename').eq('schemaname', 'public');
-     console.log("Tables:", tables || tablesError);
+    console.log("RPC get_tables failed, trying direct SQL via query (if possible) or just checking specific common names.");
+    
+    const tables = ["profiles", "users", "ideas", "Idea", "User"];
+    for (const table of tables) {
+      const { error: tableError } = await supabase.from(table).select("*").limit(0);
+      if (tableError) {
+        console.log(`Table '${table}': NOT FOUND or ERROR:`, tableError.message);
+      } else {
+        console.log(`Table '${table}': FOUND`);
+      }
+    }
   } else {
     console.log("Tables:", data);
   }
 }
 
-test();
+listTables();

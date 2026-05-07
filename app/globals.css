@@ -142,7 +142,7 @@ body {
 
 /* ─── Inputs ─── */
 .input-glass {
-  @apply px-4 py-2.5 border rounded-xl text-sm transition-all outline-none;
+  @apply w-full px-4 py-2.5 border rounded-xl text-sm transition-all outline-none;
   background: var(--hub-surface);
   border-color: var(--hub-border);
   color: var(--hub-text);
