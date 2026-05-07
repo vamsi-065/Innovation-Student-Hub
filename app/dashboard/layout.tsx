@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ReactNode, useRef } from "react";
+import { Suspense, useEffect, useState, ReactNode, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,12 +50,12 @@ const DUMMY_NOTIFICATIONS = [
   { id: 3, title: "System Update", content: "New features added to the dashboard.", time: "5h ago", read: true, type: "system" },
 ];
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+function DashboardLayoutContent({ children }: { children: ReactNode }) {
   const { user, logout, loading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -106,8 +106,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const navItems =
     user.role === "ADMIN" ? adminNav
-    : user.role === "PROFESSOR" ? professorNav
-    : studentNav;
+      : user.role === "PROFESSOR" ? professorNav
+        : studentNav;
 
   return (
     <div className="min-h-screen bg-transparent text-[var(--hub-text)] flex transition-colors duration-400">
@@ -134,8 +134,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </div>
               <nav className="space-y-1.5 flex-1 overflow-y-auto no-scrollbar">
                 {navItems.map(item => (
-                  <Link 
-                    key={item.href} 
+                  <Link
+                    key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
                     className={`nav-item ${pathname === item.href ? "active" : ""}`}
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   </Link>
                 ))}
               </nav>
-              
+
               <div className="mt-auto pt-6 space-y-1.5 border-t border-[var(--hub-border)]">
                 <Link href="/dashboard/settings" className="nav-item">
                   <Settings2 size={20} />
@@ -167,7 +167,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </AnimatePresence>
 
       {/* Sidebar (Desktop) */}
-      <aside 
+      <aside
         className={`fixed left-0 top-0 h-full z-50 bg-[var(--hub-surface)]/60 backdrop-blur-2xl border-r border-[var(--hub-border)] transition-all duration-300 hidden md:flex flex-col ${sidebarOpen ? "w-64" : "w-20"}`}
       >
         <div className="h-20 flex items-center gap-3 px-6 shrink-0 border-b border-[var(--hub-border)]">
@@ -176,7 +176,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
           <AnimatePresence>
             {sidebarOpen && (
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
@@ -192,8 +192,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           {navItems.map(item => {
             const active = pathname === item.href;
             return (
-              <Link 
-                key={item.href} 
+              <Link
+                key={item.href}
                 href={item.href}
                 className={`nav-item ${active ? "active shadow-lg shadow-sky-500/10" : ""} ${!sidebarOpen ? "justify-center px-0 h-12" : "h-11"}`}
                 title={!sidebarOpen ? item.label : ""}
@@ -211,14 +211,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="p-3 mt-auto border-t border-[var(--hub-border)] space-y-1.5">
-          <Link 
+          <Link
             href="/dashboard/settings"
             className={`nav-item ${pathname === "/dashboard/settings" ? "active" : ""} ${!sidebarOpen ? "justify-center px-0 h-12" : "h-11"}`}
           >
             <Settings2 size={20} className="shrink-0 text-[var(--hub-text-muted)]" />
             {sidebarOpen && <span className="flex-1">Settings</span>}
           </Link>
-          <button 
+          <button
             onClick={logout}
             className={`nav-item w-full text-red-400 hover:bg-red-500/10 hover:text-red-300 ${!sidebarOpen ? "justify-center px-0 h-12" : "h-11"}`}
           >
@@ -229,28 +229,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <div 
+      <div
         className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? "md:ml-64" : "md:ml-20"}`}
       >
         {/* Header */}
         <header className="h-20 border-b border-[var(--hub-border)] flex items-center justify-between px-4 md:px-6 sticky top-0 bg-[var(--hub-bg)]/80 backdrop-blur-md z-[45]">
           <div className="flex items-center gap-4 flex-1">
-            <button 
+            <button
               className="md:hidden p-2 text-[var(--hub-text-muted)] hover:text-[var(--hub-text)] transition-colors"
               onClick={() => setMobileOpen(true)}
             >
               <Menu size={24} />
             </button>
-            <button 
+            <button
               className="hidden md:flex p-2 text-[var(--hub-text-muted)] hover:text-[var(--hub-text)] transition-colors"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu size={20} />
             </button>
-            
+
             {/* Search Bar - Responsive */}
             <form onSubmit={handleSearch} className="flex-1 max-w-xl min-w-0">
-              <SearchInput 
+              <SearchInput
                 placeholder="Search ideas..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
@@ -268,10 +268,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </button>
               </Link>
             )}
-            
+
             {/* Notifications */}
             <div className="relative" ref={notifRef}>
-              <button 
+              <button
                 onClick={() => setNotifOpen(!notifOpen)}
                 className={`w-10 h-10 rounded-xl bg-[var(--hub-surface)] border border-[var(--hub-border)] flex items-center justify-center text-[var(--hub-text-muted)] hover:text-[var(--hub-text)] transition-all relative ${notifOpen ? "bg-[var(--hub-surface-2)] text-[var(--hub-text)]" : ""}`}
               >
@@ -295,11 +295,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       {DUMMY_NOTIFICATIONS.map(n => (
                         <div key={n.id} className={`p-4 border-b border-[var(--hub-border)] hover:bg-[var(--hub-surface-2)] cursor-pointer transition-colors ${!n.read ? "bg-sky-500/5" : ""}`}>
                           <div className="flex gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                              n.type === "review" ? "bg-amber-500/10 text-amber-500" :
-                              n.type === "team" ? "bg-sky-500/10 text-sky-500" :
-                              "bg-[var(--hub-text-subtle)]/10 text-[var(--hub-text-subtle)]"
-                            }`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${n.type === "review" ? "bg-amber-500/10 text-amber-500" :
+                                n.type === "team" ? "bg-sky-500/10 text-sky-500" :
+                                  "bg-[var(--hub-text-subtle)]/10 text-[var(--hub-text-subtle)]"
+                              }`}>
                               {n.type === "review" ? <Star size={14} /> : n.type === "team" ? <Users size={14} /> : <Bell size={14} />}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -321,7 +320,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileRef}>
-              <button 
+              <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center gap-2 p-1 rounded-xl hover:bg-[var(--hub-surface-2)] transition-all border border-transparent hover:border-[var(--hub-border)]"
               >
@@ -335,7 +334,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
               <AnimatePresence>
                 {profileOpen && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -358,7 +357,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       </div>
                     </Link>
                     <div className="h-px bg-[var(--hub-border)] my-1" />
-                    <button 
+                    <button
                       onClick={logout}
                       className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
                     >
@@ -391,4 +390,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   );
 }
 
-
+export default function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
+  );
+}
