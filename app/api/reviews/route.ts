@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// POST /api/reviews — submit a review (professor only)
+// POST /api/reviews - submit a review (professor only)
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/reviews?ideaId=xxx — get reviews for an idea
+// GET /api/reviews?ideaId=xxx - get reviews for an idea
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -75,4 +75,3 @@ export async function GET(req: NextRequest) {
     return apiError("Internal server error", 500);
   }
 }
-

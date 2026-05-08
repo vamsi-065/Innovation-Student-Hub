@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { generateRoomId, apiError, apiSuccess } from "@/lib/utils";
 
-// GET /api/messages/[roomId] — fetch chat history
+// GET /api/messages/[roomId] - fetch chat history
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ roomId: string }> }
@@ -37,7 +37,7 @@ export async function GET(
   }
 }
 
-// POST /api/messages/[roomId] — send a message (REST fallback)
+// POST /api/messages/[roomId] - send a message (REST fallback)
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ roomId: string }> }

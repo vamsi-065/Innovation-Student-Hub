@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// GET /api/ideas — list with filters, search, pagination
+// GET /api/ideas - list with filters, search, pagination
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/ideas — create new idea (student only)
+// POST /api/ideas - create new idea (student only)
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();

@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// POST /api/teams/[ideaId]/join — request to join a team
+// POST /api/teams/[ideaId]/join - request to join a team
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ ideaId: string }> }
@@ -61,7 +61,7 @@ export async function POST(
   }
 }
 
-// DELETE /api/teams/[ideaId]/join — leave a team
+// DELETE /api/teams/[ideaId]/join - leave a team
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ ideaId: string }> }

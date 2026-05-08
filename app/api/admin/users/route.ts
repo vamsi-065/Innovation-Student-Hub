@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabaseServer";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// GET /api/admin/users — all users (admin only)
+// GET /api/admin/users - all users (admin only)
 export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH /api/admin/users — update user role
+// PATCH /api/admin/users - update user role
 export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -86,7 +86,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE /api/admin/users — delete user
+// DELETE /api/admin/users - delete user
 export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createClient();

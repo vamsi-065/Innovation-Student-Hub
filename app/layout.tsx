@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space" });
 
 export const metadata: Metadata = {
-  title: "Student Innovation Hub — Where Ideas Take Flight",
+  title: "Student Innovation Hub - Where Ideas Take Flight",
   description:
     "The premier platform for students to share startup ideas, find collaborators, and get guidance from professors.",
   keywords: ["student innovation", "startup ideas", "collaboration", "university projects"],

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabaseServer";
 import { getAuthUser } from "@/lib/auth";
 import { apiError, apiSuccess } from "@/lib/utils";
 
-// POST /api/ideas/[id]/flag — flag an idea as inappropriate
+// POST /api/ideas/[id]/flag - flag an idea as inappropriate
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
